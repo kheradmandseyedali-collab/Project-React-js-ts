@@ -1,16 +1,17 @@
-import { LucideCheckCircle, LucidePlusCircle, LucideX } from "lucide-react";
-import { useEffect, useState } from "react";
-import DsButton from "../../components/desing_system/DsButten";
+import { CirclePlus, LucideCheckCircle, LucideX } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import Ds_Button from "../../components/desing_system/DsButton";
 import Loading from "../../components/global/Loading";
 import { BASE_URL } from "../../constants";
-import TodoItem from "./components/TodoItem";
+import TodoItem, { type Todo } from "./components/TodoItem";
+import Button from "../../components/desing_system/button";
+import { toast } from "react-toastify";
 
 const Todos = () => {
-  const [todos, setTodos] = useState([]);
+  const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [formLoading, setFormLoading] = useState(false);
-
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState<number | string | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     isCompleted: false,
@@ -31,9 +32,8 @@ const Todos = () => {
     getTodos();
   }, []);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log(formData);
+  const handleSubmit = (e ?: React.FormEvent) => {
+    if (e) e.preventDefault();
 
     setShowError(false);
     if (!formData.title) {
@@ -55,24 +55,31 @@ const Todos = () => {
     })
       .then((res) => {
         console.log(res);
-        const newItems = [
+        const newItems: Todo[] = [
           ...todos,
-          { title: formData.title, completed: formData.isCompleted },
+          {
+            id: Date.now(),
+            title: formData.title,
+            completed: formData.isCompleted,
+          },
         ];
         setTodos(newItems);
+        setFormData({ title: "", isCompleted: false });
 
-        alert("Todo added successfully");
+        toast.success("Todo added successfully");
       })
       .catch((error) => console.error(error))
       .finally(() => setFormLoading(false));
-  }; // handleSubmit
+  };
 
-  const prepareToEdit = (id) => {
+  const prepareToEdit = (id: number | string) => {
     const editingItem = todos.find((x) => x.id === id);
+    if (!editingItem) return;
+
     setEditingId(id);
     setFormData({
-      title: editingItem.title,
-      isCompleted: editingItem.completed,
+      title: editingItem.title || editingItem.todo || "",
+      isCompleted: !!editingItem.completed,
     });
   };
 
@@ -82,9 +89,10 @@ const Todos = () => {
       isCompleted: false,
     });
     setEditingId(null);
+    toast.error("CANCEL EDIT");
   };
 
-  const handleUpdate = (e) => {
+  const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
 
     setShowError(false);
@@ -108,9 +116,7 @@ const Todos = () => {
       .then((res) => {
         console.log(res);
 
-        // getTodos()
-
-        const upadtedItems = todos.map((todo) =>
+        const updatedItems = todos.map((todo) =>
           todo.id === editingId
             ? {
                 ...todo,
@@ -119,15 +125,17 @@ const Todos = () => {
               }
             : todo,
         );
-        setTodos(upadtedItems);
+        setTodos(updatedItems);
+        setEditingId(null);
+        setFormData({ title: "", isCompleted: false });
 
-        alert("Todo edited successfully");
+        toast.success("Todo edited successfully");
       })
       .catch((error) => console.error(error))
       .finally(() => setFormLoading(false));
-  }; // handleUpdate
+  };
 
-  const afterDelete = (id) => {
+  const afterDelete = (id: number | string) => {
     const remainItems = todos.filter((todo) => todo.id !== id);
     setTodos(remainItems);
   };
@@ -135,87 +143,95 @@ const Todos = () => {
   return (
     <section className="grid grid-cols-3 gap-12 max-w-2/3 mx-auto">
       <div className="col-span-1">
-        <h1 className="text-2xl font-bold mb-4">Create Todo</h1>
+        <div>
+          <h1 className="text-2xl font-bold mb-4">Create Todo</h1>
 
-        <form onSubmit={(e) => (editingId ? handleUpdate(e) : handleSubmit(e))}>
-          <div className="mb-2">
-            <label className="text-lg mb-1 flex justify-between items-baseline">
-              Title
-              {showError && (
-                <span className="text-xs text-red-500">Title is Required</span>
-              )}
-            </label>
-            <input
-              type="text"
-              placeholder="Enter Todo Title"
-              className="w-full border border-gray-400 bg-gray-800 px-3 py-2 text-lg rounded-md"
-              value={formData.title}
-              onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
-              }
-            />
-          </div>
-          <div className="mb-4">
-            <label className="text-lg flex items-center gap-1.5 cursor-pointer">
+          <form
+            onSubmit={(e) => (editingId ? handleUpdate(e) : handleSubmit(e))}
+          >
+            <div className="mb-2">
+              <label className="text-lg mb-1 flex justify-between items-baseline">
+                Title
+                {showError && (
+                  <span className="text-xs text-red-500">
+                    Title is Required
+                  </span>
+                )}
+              </label>
               <input
-                type="checkbox"
-                className="w-4 h-4"
-                checked={formData.isCompleted}
+                type="text"
+                placeholder="Enter Todo Title"
+                className="w-full border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2 text-lg rounded-md text-gray-900 dark:text-white transition-colors"
+                value={formData.title}
                 onChange={(e) =>
-                  setFormData({ ...formData, isCompleted: e.target.checked })
+                  setFormData({ ...formData, title: e.target.value })
                 }
               />
-              Completed
-            </label>
-          </div>
-          {editingId ? (
-            <div className="flex gap-2">
-              <DsButton
-                type="submit"
-                color="green"
-                size="lg"
-                icon={<LucideCheckCircle size={22} />}
-                text="Save"
-                isLoading={formLoading}
-              />
-              <DsButton
-                type="button"
-                color="gray"
-                size="lg"
-                icon={<LucideX size={22} />}
-                text="Cancel"
-                onClick={cancelEdit}
-              />
             </div>
-          ) : (
-            <DsButton
-              type="submit"
-              color="blue"
-              size="lg"
-              icon={<LucidePlusCircle size={22} />}
-              text="Add"
-              isLoading={formLoading}
-            />
-          )}
-        </form>
+            <div className="mb-4">
+              <label className="text-lg flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4"
+                  checked={formData.isCompleted}
+                  onChange={(e) =>
+                    setFormData({ ...formData, isCompleted: e.target.checked })
+                  }
+                />
+                Completed
+              </label>
+            </div>
+            {editingId ? (
+              <div className="flex gap-2">
+                <Ds_Button
+                  type="submit"
+                  color="success"
+                  size="large"
+                  startIcon={<LucideCheckCircle size={22} />}
+                  loading={formLoading}
+                  className="flex justify-center items-center gap-1"
+                >
+                  Save
+                </Ds_Button>
+                <Ds_Button
+                  type="button"
+                  color="secondary"
+                  size="large"
+                  startIcon={<LucideX size={22} />}
+                  onClick={cancelEdit}
+                  className="flex justify-center items-center gap-1"
+                >
+                  Cancel
+                </Ds_Button>
+              </div>
+            ) : (
+              <Button
+                type="submit"
+                className="flex justify-center items-center gap-1"
+                color="blue"
+                size="lg"
+                icon={<CirclePlus />}
+                text="Add"
+              />
+            )}
+          </form>
+        </div>
       </div>
 
-      <div className="col-span-2">
+      <div className="col-span-2 w-190">
         <h1 className="text-2xl font-bold mb-4">Todos List</h1>
         {isLoading ? (
           <Loading />
         ) : (
-          <ul className="divide-y divide-gray-500 border border-gray-300 rounded-lg overflow-hidden">
-            {todos.map((item) => {
-              return (
-                <TodoItem
-                  key={item.id}
-                  todo={item}
-                  prepareToEdit={prepareToEdit}
-                  afterDelete={afterDelete}
-                />
-              );
-            })}
+          <ul className="divide-y divide-gray-500 border border-gray-200 rounded-lg overflow-hidden">
+            {todos.map((item) => (
+              <TodoItem
+                key={item.id}
+                todo={item}
+                prepareToEdit={prepareToEdit}
+                afterDelete={afterDelete}
+              />
+            ))}
           </ul>
         )}
       </div>
@@ -223,4 +239,4 @@ const Todos = () => {
   );
 };
 
-export default Todos;
+export default Todos ;

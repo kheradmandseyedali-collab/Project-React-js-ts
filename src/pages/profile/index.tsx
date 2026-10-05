@@ -2,49 +2,55 @@ import { useEffect, useState } from "react";
 import PageHeader from "../../components/global/PageHeader";
 import { DUMMY_BASE_URL } from "../../constants";
 import type { User } from "../../types/user";
+import { useProfileStore } from "../../stores/sidebarProfile.store";
+import ProfileSidebar from "./components/ProfileSideBar";
+import UserInfoTab from "./components/UserInfoTab";
+import ShowProducts from "./products";
+import LoveProducts from "./LoveProducts";
 
 const Profile = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const activeTab = useProfileStore((state) => state.activeTab);
 
-
-    const [user, setUser] = useState<User | null>(null);
-
-    const getMeApi = async () => {
-        const res = await fetch(`${DUMMY_BASE_URL}/auth/me`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${sessionStorage.getItem('token')}`, // Pass JWT via Authorization header
-            }
-        })
-
-        const data = await res.json();
-        setUser(data);
+  const getMeApi = async () => {
+    try {
+      const res = await fetch(`${DUMMY_BASE_URL}/auth/me`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem("token") || ""}`,
+        },
+      });
+      const data = await res.json();
+      setUser(data);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
     }
+  };
 
+  useEffect(() => {
+    getMeApi();
+  }, []);
 
-    useEffect(() => {
-        getMeApi() ;
-    }, [])
+  return (
+    <div className="p-4 md:p-6" dir="rtl">
+      <PageHeader text="پروفایل کاربری" />
 
-    return (
-        <>
-            <PageHeader text="User Profile" />
+      <div className="flex flex-col md:flex-row gap-6 mt-6">
+        <ProfileSidebar user={user} />
 
-            <div className="flex gap-4 mt-4">
-                <figure className="w-35 h-35 flex justify-center rounded-lg p-2 bg-slate-700">
-                    <img src={user?.image} alt={user?.firstName + ' ' + user?.lastName} />
-                </figure>
+        {/* <main className="flex-1 bg-slate-800 rounded-xl p-6 text-white min-h-[300px]">
+          {activeTab === "info" && <UserInfoTab user={user} />}
+          {activeTab === "orders" && <ShowProducts />}
+          {activeTab === "favorites" && <LoveProducts />}
+        </main> */}
+        <main className="flex-1 bg-white dark:bg-slate-800 rounded-xl p-6 text-gray-800 dark:text-white min-h-[300px]">
+          {activeTab === "info" && <UserInfoTab user={user} />}
+          {activeTab === "orders" && <ShowProducts />}
+          {activeTab === "favorites" && <LoveProducts />}
+        </main>
+      </div>
+    </div>
+  );
+};
 
-                <div className="flex flex-col gap-3">
-                    <h1 className="text-4xl font-bold">{user?.firstName + ' ' + user?.lastName}</h1>
-                    <h2 className="text-2xl">{user?.email}</h2>
-                    <h3 className="text-2xl">{user?.gender}</h3>
-                </div>
-
-
-            </div>
-
-        </>
-    )
-}
-
-export default Profile ;
+export default Profile;

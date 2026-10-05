@@ -6,9 +6,23 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { BASE_URL } from "../../../constants";
-import DsButton from "../../../components/desing_system/DsButten";
+import { toast } from "react-toastify";
+import Button from "../../../components/desing_system/button";
 
-const TodoItem = ({ todo , prepareToEdit , afterDelete }) => {
+export type Todo = {
+  id: number | string;
+  title?: string;
+  todo?: string;
+  completed?: boolean;
+};
+
+type TodoItemProps = {
+  todo: Todo;
+  prepareToEdit: (id: number | string) => void;
+  afterDelete: (id: number | string) => void;
+};
+
+const TodoItem = ({ todo, prepareToEdit, afterDelete }: TodoItemProps) => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [statusLoading, setStatusLoading] = useState(false);
 
@@ -26,16 +40,14 @@ const TodoItem = ({ todo , prepareToEdit , afterDelete }) => {
     })
       .then((res) => {
         console.log(res);
-
-        // getTodos()
         afterDelete(todo.id);
-        alert("Todo deleted successfully");
+        toast.success("Todo deleted successfully");
       })
       .catch((error) => console.error(error))
       .finally(() => setDeleteLoading(false));
-  }; // handleDelete
+  };
 
-  const handleChangeStatus = (newStatus) => {
+  const handleChangeStatus = (newStatus: boolean) => {
     setStatusLoading(true);
 
     fetch(`${BASE_URL}/todos/${todo.id}`, {
@@ -49,62 +61,57 @@ const TodoItem = ({ todo , prepareToEdit , afterDelete }) => {
     })
       .then((res) => {
         console.log(res);
-
-        // getTodos()
-
-        // const upadtedItems = todos.map((todo) => todo.id === editingId ? { ...todo, title: formData.title, completed: formData.isCompleted } : todo);
-        // setTodos(upadtedItems)
-
-        // alert('Todo edited successfully');
-
         todo.completed = newStatus;
       })
       .catch((error) => console.error(error))
       .finally(() => setStatusLoading(false));
-  }; // handleUpdate
+  };
+
+  const edit = () => {
+    prepareToEdit(todo.id);
+  };
 
   return (
-    <li className="flex justify-between px-4 py-2 transition-all hover:bg-gray-800">
+    <li className="flex justify-between px-4 py-2 transition-all bg-white text-gray-800 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-slate-700 rounded-md">
       <p
-        className={`text-base ${todo.completed ? "line-through opacity-50" : ""}`}
+        className={`text-base ${
+          todo.completed ? "relative line-through opacity-50" : ""
+        }`}
       >
-        {todo.title}
+        {todo.title || todo.todo}
       </p>
       <div className="flex gap-1">
         {todo.completed ? (
-          <DsButton
-            color="gray"
-            size="sm"
-            icon={<LucideUndo />}
+          <Button
+            color="gray_2"
+            size="xxl"
+            icon={statusLoading ? undefined : <LucideUndo size={18.5} />}
             justIcon
             tooltip="Uncomplete"
             isLoading={statusLoading}
             onClick={() => handleChangeStatus(false)}
           />
         ) : (
-          <DsButton
-            color="green"
-            size="sm"
-            icon={<LucideCheckCircle />}
-            justIcon
+          <Button
+            color="green_2"
+            size="xxl"
+            icon={statusLoading ? undefined : <LucideCheckCircle size={18.5} />}
             tooltip="Completed"
             isLoading={statusLoading}
             onClick={() => handleChangeStatus(true)}
           />
         )}
-        <DsButton
-          color="blue"
-          size="sm"
-          icon={<LucidePencil />}
-          justIcon
-          onClick={() => prepareToEdit(todo.id)}
+        <Button
+          color="blue_2"
+          size="xxl"
+          icon={<LucidePencil size={18.5} />}
+          onClick={edit}
           tooltip="Edit"
         />
-        <DsButton
-          color="red"
-          size="sm"
-          icon={<LucideTrash />}
-          justIcon
+        <Button
+          color="red_2"
+          size="xxl"
+          icon={<LucideTrash size={18.5} />}
           isLoading={deleteLoading}
           onClick={handleDelete}
           tooltip="Delete"
@@ -114,4 +121,4 @@ const TodoItem = ({ todo , prepareToEdit , afterDelete }) => {
   );
 };
 
-export default TodoItem;
+export default TodoItem ;

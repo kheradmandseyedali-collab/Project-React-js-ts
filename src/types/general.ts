@@ -1,1 +1,23 @@
-export type theme = 'light' | 'dark'
+export type Theme = 'light' | 'dark';
+
+export type LoginResponse = {
+    accessToken: string
+}
+export type Product = {
+  id: number;
+  title: string;
+  description ?: string;
+  price: number;
+  discountPercentage?: number;
+  rating?: number;
+  stock?: number;
+  brand?: string;
+  category?: string;
+  thumbnail: string;
+  images?: string[];
+};
+
+export type CartItem = {
+  product: Product;
+  quantity: number;
+};

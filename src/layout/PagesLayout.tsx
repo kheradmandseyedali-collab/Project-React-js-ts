@@ -1,4 +1,4 @@
-import type { FC, PropsWithChildren } from "react"
+import type { FC , PropsWithChildren } from "react"
 
 const PagesLayout: FC<PropsWithChildren> = ({ children }) => {
     return (
@@ -8,4 +8,4 @@ const PagesLayout: FC<PropsWithChildren> = ({ children }) => {
     )
 }
 
-export default PagesLayout
+export default PagesLayout ;

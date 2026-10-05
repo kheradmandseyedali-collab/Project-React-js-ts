@@ -15,7 +15,7 @@ type PropTypes = {
   onClick?: () => void
 }
 
-const DsButton = ({
+const DsButton2 = ({
   type = 'button',
   text,
   color = 'gray',
@@ -68,4 +68,4 @@ const DsButton = ({
   )
 }
 
-export default DsButton
+export default DsButton2 ;
